@@ -7,8 +7,8 @@ def main():
         while(True):
             message = car.receive()
             car.control(0.2, 0.2)
-            if message.Valid:
-                print(f"Distance: {message.Distance}, ForeBlock: {message.ForeBlock}, OnGround: {message.OnGround}")
+            if message.isValid:
+                print(f"Distance: {message.distance}, ForeBlock: {message.frontBlock}, OnGround: {message.onBlack}")
     except KeyboardInterrupt:
         print("exit")
         car.close()

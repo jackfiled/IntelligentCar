@@ -74,7 +74,6 @@ def control_thread():
         # time.sleep(0.1)  # 控制频率
 
 
-
 def main(control_thread=None):
     try:
         control_thread = threading.Thread(target=control_thread)

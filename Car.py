@@ -38,6 +38,8 @@ class Car:
         self.left = 0.0
         self.right = 0.0
         self.message=None
+        self.receiveFlag = True
+        self.sendFlag = True
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
@@ -45,70 +47,52 @@ class Car:
         except :
             print("连接小车失败")
 
-        self.normalSpeeed=0.2
+        self.receiveThread = threading.Thread(target=self.doReceive)
+        self.sendThread = threading.Thread(target=self.doSend)
+        
+        self.receiveThread.start()
+        self.sendThread.start()
 
-        # 持续发送控制信号
-        def work():
-            while True:
-                threading.Thread(target=self.doSend).start()
-                threading.Thread(target=self.receive).start()
-                time.sleep(0.05)
 
-        thread = threading.Thread(target=work)
-        thread.start()
+    
+    def doReceive(self) -> None:
+        while self.receiveFlag:
+            try:
+                receiveDaa = self.socket.recv(1024)
+                m = Message(receiveDaa.decode())
 
-    # 接受传感器
-    def receive(self) -> Message:
-        try:
-            receiveData = self.socket.recv(1024)
-            m = Message(receiveData.decode())
+                if m.isValid:
+                    self.message = m;
+            except Exception as e:
+                print(f"接受传感器消息失败: {e}")
 
-            if m.isValid:
-                self.message=m
-                if m.frontBlock or m.distance<10 or m.distance> 1000:
-                    self.set(0, 0)
-        except :
-            #print("接受传感器信息失败")
-            pass
-        return self.message
+    # 实际发送
+    def doSend(self):
+        while self.sendFlag:
+            controlObj = {}
+            controlObj["servos"] = [
+                {
+                    "isTurn": True if self.left > 0 else False,
+                    "servoId": 6,
+                    "servoSpeed": self.left
+                },
+                {
+                    "isTurn": True if self.right > 0 else False,
+                    "servoId": 3,
+                    "servoSpeed": self.right
+                }
+            ]
+            controlStr = json.dumps(controlObj) + "\r\n"
+            try:
+                self.socket.send(controlStr.encode())
+            except Exception as e:
+                print(f"发送控制消息失败: {e}")
 
-    # 设定舵机属性
+        # 设定舵机属性
     def set(self, left, right) -> None:
         self.left = left
         self.right = right
 
-    # def set(self,speed)->None:
-    #     self.set(speed,speed)
-
-    # 立即控制
-    def control(self, left, right) -> None:
-        self.set(left, right)
-        self.doSend()
-
-    # 实际发送
-    def doSend(self):
-        controlObj = {}
-        controlObj["servos"] = [
-            {
-                "isTurn": True if self.left > 0 else False,
-                "servoId": 6,
-                "servoSpeed": abs(self.left)
-            },
-            {
-                "isTurn": True if self.right > 0 else False,
-                "servoId": 3,
-                "servoSpeed": abs(self.right)
-            }
-        ]
-        controlStr = json.dumps(controlObj) + "\r\n"
-        # print(controlStr)
-        code=0
-        try:
-            code=self.socket.send(controlStr.encode())
-        except Exception as e:
-            #print(f"发送失败{e}")
-            pass
-        return code
-
     def close(self) -> None:
         self.socket.close()
+        

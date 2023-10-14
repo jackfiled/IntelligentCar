@@ -62,13 +62,13 @@ def control_thread():
     while True:
         # 根据按键状态控制小车
         if forward_pressed:
-            car.set(car.normalSpeeed, car.normalSpeeed)  # 前进
+            car.set(0.3, 0.3)  # 前进
         elif backward_pressed:
-            car.set(-car.normalSpeeed, -car.normalSpeeed)  # 后退
+            car.set(-0.3, -0.3)  # 后退
         elif left_pressed:
-            car.set(0, car.normalSpeeed)  # 左转
+            car.set(0, 0.3)  # 左转
         elif right_pressed:
-            car.set(car.normalSpeeed, 0)  # 右转
+            car.set(0.3, 0)  # 右转
         else:
             car.set(0, 0)  # 停止
         # time.sleep(0.1)  # 控制频率

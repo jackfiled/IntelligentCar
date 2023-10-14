@@ -64,7 +64,7 @@ class Car:
                 if m.isValid:
                     self.message = m;
             except Exception as e:
-                print(f"接受传感器消息失败: {e}")
+                pass
 
     # 实际发送
     def doSend(self):
@@ -72,12 +72,12 @@ class Car:
             controlObj = {}
             controlObj["servos"] = [
                 {
-                    "isTurn": True if self.left > 0 else False,
+                    "isTurn": "true" if self.left > 0 else "false",
                     "servoId": 6,
                     "servoSpeed": self.left
                 },
                 {
-                    "isTurn": True if self.right > 0 else False,
+                    "isTurn": "true" if self.right > 0 else "false",
                     "servoId": 3,
                     "servoSpeed": self.right
                 }
@@ -86,7 +86,8 @@ class Car:
             try:
                 self.socket.send(controlStr.encode())
             except Exception as e:
-                print(f"发送控制消息失败: {e}")
+                print(e)
+            time.sleep(0.05)
 
         # 设定舵机属性
     def set(self, left, right) -> None:
